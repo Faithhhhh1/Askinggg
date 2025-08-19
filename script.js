@@ -52,10 +52,15 @@
         }, Math.random() * 20000 + 10000);
     }
 })();
-*/
-const JSONBIN_URL = "https://api.jsonbin.io/v3/b/68a472bfd0ea881f405d62b5";
-const API_KEY = "$2a$10$9e748i0n/epFU.yOy62IquBFIoDriIpOm9Bo0h5qYfg86ZKa3MFZ2";  // 🔑 replace with your key
+/* =============================
+   Asking Project Script
+   ============================= */
 
+// 👉 JSONbin endpoint + API Key
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/68a472bfd0ea881f405d62b5";
+const API_KEY = "$2a$10$9e748i0n/epFU.yOy62IquBFIoDriIpOm9Bo0h5qYfg86ZKa3MFZ2";  
+
+// 👉 Messages shown when she presses "No"
 const messages = [
     "Are you sure?",
     "Really sure??",
@@ -76,29 +81,36 @@ const messages = [
     "Say yes and I’ll never let you go 😘"
 ];
 
+// 👉 Counters
 let messageIndex = 0;
 let noCount = 0;
 let yesClickedAt = null;
 
-// 👉 Log to JSONbin
+/* =============================
+   Function: Log to JSONbin
+   ============================= */
 async function logToJSONbin(action, noCount) {
     try {
-        // 1. Get current bin data
+        console.log("Fetching current bin data...");
         const getRes = await fetch(JSONBIN_URL, {
             method: "GET",
             headers: { "X-Master-Key": API_KEY }
         });
-        const binData = await getRes.json();
 
-        // 2. Append new log entry
-        const logs = binData.record.logs || [];
+        if (!getRes.ok) {
+            console.error("GET failed:", getRes.status, await getRes.text());
+            return;
+        }
+
+        const binData = await getRes.json();
+        const logs = (binData.record && binData.record.logs) ? binData.record.logs : [];
+
         logs.push({
             timestamp: new Date().toLocaleString(),
             action,
             noCount
         });
 
-        // 3. Save updated logs back
         const putRes = await fetch(JSONBIN_URL, {
             method: "PUT",
             headers: {
@@ -108,13 +120,15 @@ async function logToJSONbin(action, noCount) {
             body: JSON.stringify({ logs })
         });
 
-        console.log("Logged to JSONbin:", await putRes.json());
+        console.log("✅ Logged:", await putRes.json());
     } catch (err) {
-        console.error("Error logging:", err);
+        console.error("Error logging to JSONbin:", err);
     }
 }
 
-// 👉 Handle No click
+/* =============================
+   Function: Handle "No" click
+   ============================= */
 function handleNoClick() {
     const noButton = document.querySelector('.no-button');
     const yesButton = document.querySelector('.yes-button');
@@ -125,23 +139,24 @@ function handleNoClick() {
     const currentSize = parseFloat(window.getComputedStyle(yesButton).fontSize);
     yesButton.style.fontSize = `${currentSize * 1.5}px`;
 
-    // log No click
     noCount++;
     logToJSONbin("No clicked", noCount);
 }
 
-// 👉 Handle Yes click
+/* =============================
+   Function: Handle "Yes" click
+   ============================= */
 function handleYesClick() {
     yesClickedAt = new Date().toLocaleString();
 
-    // log Yes click
     logToJSONbin("YES clicked!", noCount);
 
-    // redirect to yes_page
     window.location.href = "yes_page.html";
 }
 
-// Attach event listeners
+/* =============================
+   Attach event listeners
+   ============================= */
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelector('.no-button').addEventListener("click", handleNoClick);
     document.querySelector('.yes-button').addEventListener("click", handleYesClick);
