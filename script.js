@@ -54,7 +54,7 @@
 })();
 */
 const JSONBIN_URL = "https://api.jsonbin.io/v3/b/68a472bfd0ea881f405d62b5";
-const API_KEY = "YOUR_X_MASTER_KEY";  // 🔑 replace with your key
+const API_KEY = "$2a$10$9e748i0n/epFU.yOy62IquBFIoDriIpOm9Bo0h5qYfg86ZKa3MFZ2";  // 🔑 replace with your key
 
 const messages = [
     "Are you sure?",
