@@ -53,6 +53,9 @@
     }
 })();
 */
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/68a472bfd0ea881f405d62b5";
+const API_KEY = "YOUR_X_MASTER_KEY";  // 🔑 replace with your key
+
 const messages = [
     "Are you sure?",
     "Really sure??",
@@ -63,7 +66,7 @@ const messages = [
     "I will be very sad...",
     "I will be very very very sad...",
     "Ok fine, I will stop asking...",
-    "Just kidding, say yes please! ❤",
+    "Just kidding, say yes please! ❤️",
     "Don’t break my heart 💔",
     "You’re literally my dream girl 😍",
     "Come on, we’d be so cute together 🥹",
@@ -74,16 +77,72 @@ const messages = [
 ];
 
 let messageIndex = 0;
+let noCount = 0;
+let yesClickedAt = null;
 
+// 👉 Log to JSONbin
+async function logToJSONbin(action, noCount) {
+    try {
+        // 1. Get current bin data
+        const getRes = await fetch(JSONBIN_URL, {
+            method: "GET",
+            headers: { "X-Master-Key": API_KEY }
+        });
+        const binData = await getRes.json();
+
+        // 2. Append new log entry
+        const logs = binData.record.logs || [];
+        logs.push({
+            timestamp: new Date().toLocaleString(),
+            action,
+            noCount
+        });
+
+        // 3. Save updated logs back
+        const putRes = await fetch(JSONBIN_URL, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": API_KEY
+            },
+            body: JSON.stringify({ logs })
+        });
+
+        console.log("Logged to JSONbin:", await putRes.json());
+    } catch (err) {
+        console.error("Error logging:", err);
+    }
+}
+
+// 👉 Handle No click
 function handleNoClick() {
     const noButton = document.querySelector('.no-button');
     const yesButton = document.querySelector('.yes-button');
+
     noButton.textContent = messages[messageIndex];
     messageIndex = (messageIndex + 1) % messages.length;
+
     const currentSize = parseFloat(window.getComputedStyle(yesButton).fontSize);
     yesButton.style.fontSize = `${currentSize * 1.5}px`;
+
+    // log No click
+    noCount++;
+    logToJSONbin("No clicked", noCount);
 }
 
+// 👉 Handle Yes click
 function handleYesClick() {
+    yesClickedAt = new Date().toLocaleString();
+
+    // log Yes click
+    logToJSONbin("YES clicked!", noCount);
+
+    // redirect to yes_page
     window.location.href = "yes_page.html";
 }
+
+// Attach event listeners
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelector('.no-button').addEventListener("click", handleNoClick);
+    document.querySelector('.yes-button').addEventListener("click", handleYesClick);
+});
